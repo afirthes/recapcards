@@ -16,5 +16,5 @@ func main() {
 	}
 
 	log.Printf("Server started at %s \n", cfg.addr)
-	log.Fatal(app.Run())
+	log.Fatal(app.Run(app.mount()))
 }
