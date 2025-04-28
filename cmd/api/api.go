@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"log"
 	"net/http"
 	"time"
@@ -14,10 +16,16 @@ type application struct {
 	config config
 }
 
-func (app *application) mount() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", app.healthHandler)
-	return mux
+func (app *application) mount() http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	r.Route("/v1", func(r chi.Router) {
+		r.Get("/health", app.healthHandler)
+	})
+
+	return r
 }
 
 func (app *application) healthHandler(w http.ResponseWriter, _ *http.Request) {
@@ -27,7 +35,7 @@ func (app *application) healthHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func (app *application) Run(mux *http.ServeMux) error {
+func (app *application) Run(mux http.Handler) error {
 
 	if app.config.addr == "" {
 		log.Fatalf("FATAL: Server address is not set")
