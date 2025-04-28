@@ -11,11 +11,19 @@ import (
 
 type config struct {
 	addr string
+	db   dbConfig
 }
 
 type application struct {
 	config  config
 	storage store.Storage
+}
+
+type dbConfig struct {
+	addr         string
+	maxOpenConns int
+	maxIdleConns int
+	maxIdleTime  string
 }
 
 func (app *application) mount() http.Handler {
@@ -40,7 +48,7 @@ func (app *application) mount() http.Handler {
 func (app *application) healthHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := w.Write([]byte("OK"))
 
-	app.storage.Posts.Create(r.Context())
+	app.storage.Posts.Create(r.Context(), &store.Post{})
 
 	if err != nil {
 		return
