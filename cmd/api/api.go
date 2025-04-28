@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/afirthes/recapcards/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"log"
@@ -13,7 +14,8 @@ type config struct {
 }
 
 type application struct {
-	config config
+	config  config
+	storage store.Storage
 }
 
 func (app *application) mount() http.Handler {
@@ -35,8 +37,11 @@ func (app *application) mount() http.Handler {
 	return r
 }
 
-func (app *application) healthHandler(w http.ResponseWriter, _ *http.Request) {
+func (app *application) healthHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := w.Write([]byte("OK"))
+
+	app.storage.Posts.Create(r.Context())
+
 	if err != nil {
 		return
 	}
