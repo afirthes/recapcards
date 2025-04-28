@@ -8,3 +8,15 @@ https://github.com/air-verse/air
 
 To work with environment files install direnv
 https://github.com/direnv/direnv/blob/master/docs/installation.md
+If variables are not visible, you need to run 
+```bash 
+  direnv allow
+```
+
+# Database migrations
+Migrations are made with golang-migrate tool. Install like a cli:
+```bash
+  brew install golang-migrate
+```
+More insttructions
+https://github.com/golang-migrate/migrate/tree/master/cmd/migrate
