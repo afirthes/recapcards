@@ -10,8 +10,9 @@ import (
 )
 
 type config struct {
-	addr string
-	db   dbConfig
+	Addr string
+	Db   dbConfig
+	Env  string
 }
 
 type application struct {
@@ -46,10 +47,8 @@ func (app *application) mount() http.Handler {
 }
 
 func (app *application) healthHandler(w http.ResponseWriter, r *http.Request) {
-	_, err := w.Write([]byte("OK"))
-
-	app.storage.Posts.Create(r.Context(), &store.Post{})
-
+	w.Header().Set("Content-Type", "application/json")
+	err := writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "version": version, "env": app.config.Env})
 	if err != nil {
 		return
 	}
@@ -57,12 +56,12 @@ func (app *application) healthHandler(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) Run(mux http.Handler) error {
 
-	if app.config.addr == "" {
+	if app.config.Addr == "" {
 		log.Fatalf("FATAL: Server address is not set")
 	}
 
 	srv := &http.Server{
-		Addr:         app.config.addr,
+		Addr:         app.config.Addr,
 		Handler:      mux,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
