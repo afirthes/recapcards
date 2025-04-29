@@ -45,8 +45,11 @@ func (app *application) mount() http.Handler {
 
 		r.Route("/posts", func(r chi.Router) {
 			r.Post("/", app.createPostHandler)
-			r.Route("/{id}", func(r chi.Router) {
+			r.Route("/{postID}", func(r chi.Router) {
+				r.Use(app.postsContextMiddleware)
 				r.Get("/", app.getPostHandler)
+				r.Delete("/", app.deletePostHandler)
+				r.Patch("/", app.updatePostHandler)
 			})
 		})
 	})
@@ -54,7 +57,7 @@ func (app *application) mount() http.Handler {
 	return r
 }
 
-func (app *application) healthHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) healthHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	err := writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "version": version, "env": app.config.Env})
 	if err != nil {

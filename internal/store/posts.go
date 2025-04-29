@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/lib/pq"
 	"log"
+	"time"
 )
 
 type Post struct {
@@ -22,6 +23,8 @@ type Post struct {
 type Posts interface {
 	Create(context.Context, *Post) error
 	GetByID(context.Context, int64) (*Post, error)
+	Delete(context.Context, int64) error
+	Update(context.Context, *Post) error
 }
 
 // Make sure that the PostStorage implements the Posts interface
@@ -93,4 +96,56 @@ func (s *PostStorage) GetByID(ctx context.Context, id int64) (*Post, error) {
 	}
 
 	return &post, nil
+}
+
+func (s *PostStorage) Delete(ctx context.Context, id int64) error {
+	query := `
+		DELETE FROM posts
+		WHERE id = $1
+	`
+
+	res, err := s.db.ExecContext(
+		ctx,
+		query,
+		id,
+	)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+func (s *PostStorage) Update(ctx context.Context, post *Post) error {
+	query := `
+		UPDATE posts
+		SET content = $1, title = $2, tags = $3
+		WHERE id = $4
+	`
+
+	_, err := s.db.ExecContext(
+		ctx,
+		query,
+		post.Content,
+		post.Title,
+		pq.Array(post.Tags),
+		post.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	post.UpdatedAt = time.Now().String()
+
+	return nil
 }
