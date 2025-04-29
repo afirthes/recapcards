@@ -19,7 +19,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 
 	var postDTO CreatePostPayload
 	if err := readJSON(w, r, &postDTO); err != nil {
-		writeJSONError(w, http.StatusBadRequest, "Invalid request payload")
+		app.badRequestResponse(w, r, err)
 		return
 	}
 
@@ -31,14 +31,12 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	if err := app.storage.Posts.Create(r.Context(), post); err != nil {
-		log.Println(err.Error())
-		writeJSONError(w, http.StatusInternalServerError, "Error creating post id db")
+		app.internalServerError(w, r, err)
 		return
 	}
 
 	if err := writeJSON(w, http.StatusCreated, post); err != nil {
-		log.Println(err.Error())
-		writeJSONError(w, http.StatusInternalServerError, "Error writing post to response")
+		app.internalServerError(w, r, err)
 		return
 	}
 
@@ -48,8 +46,7 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	postID := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(postID, 10, 64)
 	if err != nil {
-		log.Println(err.Error())
-		writeJSONError(w, http.StatusBadRequest, "Invalid post id")
+		app.internalServerError(w, r, err)
 		return
 	}
 
@@ -57,17 +54,17 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err.Error())
 		if errors.Is(err, store.ErrNotFound) {
-			writeJSONError(w, http.StatusNotFound, "Post not found")
+			app.notFoundResponse(w, r, err)
 			return
 		} else {
-			writeJSONError(w, http.StatusInternalServerError, "Error getting post")
+			app.internalServerError(w, r, err)
 			return
 		}
 	}
 
 	if err := writeJSON(w, http.StatusOK, post); err != nil {
 		log.Println(err.Error())
-		writeJSONError(w, http.StatusInternalServerError, "Error writing post to response")
+		app.internalServerError(w, r, err)
 		return
 	}
 }
