@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/lib/pq"
-	"log"
 	"time"
 )
 
@@ -60,10 +59,7 @@ func (s *PostStorage) Create(ctx context.Context, post *Post) error {
 	if err != nil {
 		return err
 	}
-
 	post.ID = id
-
-	log.Printf("Created post with id %d", post.ID)
 	return nil
 }
 

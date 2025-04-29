@@ -32,7 +32,6 @@ func (s *UserStorage) Create(ctx context.Context, user *User) error {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	var id int64
 	err := s.db.QueryRowContext(
 		ctx,
 		query,
@@ -40,7 +39,8 @@ func (s *UserStorage) Create(ctx context.Context, user *User) error {
 		user.Password,
 		user.Email,
 	).Scan(
-		&id,
+		&user.ID,
+		&user.CreatedAt,
 	)
 	if err != nil {
 		return err
