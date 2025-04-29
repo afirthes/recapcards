@@ -12,13 +12,15 @@ var (
 )
 
 type Storage struct {
-	Posts Posts
-	Users Users
+	Posts    Posts
+	Users    Users
+	Comments Comments
 }
 
 func NewPostgresStorage(db *sql.DB) Storage {
 	return Storage{
-		Posts: &PostStorage{db},
-		Users: &UserStorage{db},
+		Posts:    &PostStorage{db},
+		Users:    &UserStorage{db},
+		Comments: &CommentStore{db},
 	}
 }
