@@ -42,6 +42,9 @@ func (s *PostStorage) Create(ctx context.Context, post *Post) error {
 	VALUES ($1, $2, $3, $4)
 	RETURNING id`
 
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
 	var id int64
 	err := s.db.QueryRowContext(
 		ctx,
@@ -70,6 +73,9 @@ func (s *PostStorage) GetByID(ctx context.Context, id int64) (*Post, error) {
 		FROM posts
 		WHERE id = $1
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
 
 	var post Post
 
@@ -106,6 +112,9 @@ func (s *PostStorage) Delete(ctx context.Context, id int64) error {
 		WHERE id = $1
 	`
 
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
 	res, err := s.db.ExecContext(
 		ctx,
 		query,
@@ -135,6 +144,10 @@ func (s *PostStorage) Update(ctx context.Context, post *Post) error {
 		WHERE id = $4 AND version = $5
 		RETURNING version
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
 	err := s.db.QueryRowContext(
 		ctx,
 		query,
