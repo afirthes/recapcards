@@ -41,5 +41,12 @@ func (app *application) jsonResponse(w http.ResponseWriter, status int, data any
 		Data any `json:"data"`
 	}
 
-	return writeJSON(w, status, &envelope{Data: data})
+	err := writeJSON(w, status, &envelope{Data: data})
+	if err != nil {
+		return err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	return nil
 }
