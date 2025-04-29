@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/afirthes/recapcards/internal/store"
 	"github.com/go-chi/chi/v5"
+	_ "github.com/go-playground/validator/v10"
 	"log"
 	"net/http"
 	"strconv"
@@ -19,6 +20,12 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 
 	var postDTO CreatePostPayload
 	if err := readJSON(w, r, &postDTO); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	err := Validate.Struct(postDTO)
+	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}

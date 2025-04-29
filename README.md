@@ -20,3 +20,6 @@ Migrations are made with golang-migrate tool. Install like a cli:
 ```
 More insttructions
 https://github.com/golang-migrate/migrate/tree/master/cmd/migrate
+
+# Validation
+https://github.com/go-playground/validator

@@ -53,6 +53,8 @@ func (s *PostStorage) Create(ctx context.Context, post *Post) error {
 		return err
 	}
 
+	post.ID = id
+
 	log.Printf("Created post with id %d", post.ID)
 	return nil
 }
