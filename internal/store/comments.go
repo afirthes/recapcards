@@ -49,7 +49,8 @@ func (s *CommentStore) GetByPostID(ctx context.Context, postID int64) ([]Comment
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+
+	defer CloseRows(rows)
 
 	var comments []Comment
 	for rows.Next() {
