@@ -41,6 +41,10 @@ func (app *application) jsonResponse(w http.ResponseWriter, status int, data any
 		Data any `json:"data"`
 	}
 
+	if data == nil {
+		return nil
+	}
+
 	err := writeJSON(w, status, &envelope{Data: data})
 	if err != nil {
 		return err

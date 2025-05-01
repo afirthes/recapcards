@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 )
 
 type User struct {
@@ -15,6 +16,7 @@ type User struct {
 
 type Users interface {
 	Create(context.Context, *User) error
+	GetByID(context.Context, int64) (*User, error)
 }
 
 // Make sure that the UserStorage implements the Users interface
@@ -47,4 +49,38 @@ func (s *UserStorage) Create(ctx context.Context, user *User) error {
 	}
 
 	return nil
+}
+
+func (s *UserStorage) GetByID(ctx context.Context, id int64) (*User, error) {
+	query := `
+		SELECT id, username, email, created_at
+		FROM users
+		WHERE id = $1
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	var user User
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		id,
+	).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.CreatedAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
 }
