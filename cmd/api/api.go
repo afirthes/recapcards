@@ -4,26 +4,39 @@ import (
 	"fmt"
 	"github.com/afirthes/recapcards/docs"
 	"github.com/afirthes/recapcards/internal/store"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/swaggo/http-swagger/v2"
-	"go.uber.org/zap"
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"go.uber.org/zap"
+
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
-type config struct {
-	Addr   string
-	Db     dbConfig
-	Env    string
-	ApiURL string
+type application struct {
+	config config
+	store  store.Storage
+	logger *zap.SugaredLogger
 }
 
-type application struct {
-	config  config
-	storage store.Storage
-	logger  *zap.SugaredLogger
+type config struct {
+	addr        string
+	db          dbConfig
+	env         string
+	apiURL      string
+	mail        mailConfig
+	frontendURL string
+}
+
+type mailConfig struct {
+	sendGrid  sendGridConfig
+	fromEmail string
+	exp       time.Duration
+}
+
+type sendGridConfig struct {
+	apiKey string
 }
 
 type dbConfig struct {
@@ -35,29 +48,29 @@ type dbConfig struct {
 
 func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
+
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	// Timeout on request context (ctx), that will signal
-	// through ctx.Done() that the request has time out and further
+	// Set a timeout value on the request context (ctx), that will signal
+	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Route("/v1", func(r chi.Router) {
+		r.Get("/health", app.healthCheckHandler)
 
-		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.Addr)
-		r.Get("/swagger/*", httpSwagger.Handler(
-			httpSwagger.URL(docsURL),
-		))
-
-		r.Get("/health", app.healthHandler)
+		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
+		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 
 		r.Route("/posts", func(r chi.Router) {
 			r.Post("/", app.createPostHandler)
+
 			r.Route("/{postID}", func(r chi.Router) {
 				r.Use(app.postsContextMiddleware)
+
 				r.Get("/", app.getPostHandler)
 				r.Delete("/", app.deletePostHandler)
 				r.Patch("/", app.updatePostHandler)
@@ -65,41 +78,45 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/users", func(r chi.Router) {
-			r.Post("/", app.createUserHandler)
+			r.Put("/activate/{token}", app.activateUserHandler)
+
 			r.Route("/{userID}", func(r chi.Router) {
-				r.Use(app.usersContextMiddleware)
+				r.Use(app.userContextMiddleware)
+
+				r.Get("/", app.getUserHandler)
 				r.Put("/follow", app.followUserHandler)
 				r.Put("/unfollow", app.unfollowUserHandler)
-				r.Get("/", app.getUserHandler)
+			})
 
-				r.Group(func(r chi.Router) {
-					r.Get("/feed", app.getUserFeedHandler)
-				})
+			r.Group(func(r chi.Router) {
+				r.Get("/feed", app.getUserFeedHandler)
 			})
 		})
 
+		// Public routes
+		r.Route("/authentication", func(r chi.Router) {
+			r.Post("/user", app.registerUserHandler)
+		})
 	})
 
 	return r
 }
 
-func (app *application) Run(mux http.Handler) error {
-
+func (app *application) run(mux http.Handler) error {
+	// Docs
 	docs.SwaggerInfo.Version = version
-	docs.SwaggerInfo.Host = app.config.ApiURL
+	docs.SwaggerInfo.Host = app.config.apiURL
 	docs.SwaggerInfo.BasePath = "/v1"
 
-	if app.config.Addr == "" {
-		log.Fatalf("FATAL: Server address is not set")
+	srv := &http.Server{
+		Addr:         app.config.addr,
+		Handler:      mux,
+		WriteTimeout: time.Second * 30,
+		ReadTimeout:  time.Second * 10,
+		IdleTimeout:  time.Minute,
 	}
 
-	srv := &http.Server{
-		Addr:         app.config.Addr,
-		Handler:      mux,
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-		IdleTimeout:  15 * time.Second,
-	}
+	app.logger.Infow("server has started", "addr", app.config.addr, "env", app.config.env)
 
 	return srv.ListenAndServe()
 }

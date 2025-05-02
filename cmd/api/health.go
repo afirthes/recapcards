@@ -1,6 +1,8 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+)
 
 // healthcheckHandler godoc
 //
@@ -10,14 +12,14 @@ import "net/http"
 //	@Produce		json
 //	@Success		200	{object}	string	"ok"
 //	@Router			/health [get]
-func (app *application) healthHandler(w http.ResponseWriter, _ *http.Request) {
+func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	data := map[string]string{
 		"status":  "ok",
+		"env":     app.config.env,
 		"version": version,
-		"env":     app.config.Env,
 	}
-	err := app.jsonResponse(w, http.StatusOK, data)
-	if err != nil {
-		return
+
+	if err := app.jsonResponse(w, http.StatusOK, data); err != nil {
+		app.internalServerError(w, r, err)
 	}
 }

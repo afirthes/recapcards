@@ -14,29 +14,13 @@ type Comment struct {
 	User      User   `json:"user"`
 }
 
-type Comments interface {
-	Create(ctx context.Context, comment *Comment) error
-	GetByPostID(ctx context.Context, postID int64) ([]Comment, error)
-}
-
-// Make sure that the PostStorage implements the Posts interface
-var _ Comments = (*CommentStore)(nil)
-
 type CommentStore struct {
 	db *sql.DB
 }
 
 func (s *CommentStore) GetByPostID(ctx context.Context, postID int64) ([]Comment, error) {
 	query := `
-		SELECT 
-		    c.id, 
-		    c.post_id, 
-		    c.user_id, 
-		    c.content, 
-		    c.created_at, 
-		    users.username, 
-		    users.id  
-		FROM comments c
+		SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, users.username, users.id  FROM comments c
 		JOIN users on users.id = c.user_id
 		WHERE c.post_id = $1
 		ORDER BY c.created_at DESC;
@@ -49,21 +33,13 @@ func (s *CommentStore) GetByPostID(ctx context.Context, postID int64) ([]Comment
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	defer CloseRows(rows)
-
-	var comments []Comment
+	comments := []Comment{}
 	for rows.Next() {
 		var c Comment
 		c.User = User{}
-		err := rows.Scan(
-			&c.ID,
-			&c.PostID,
-			&c.UserID,
-			&c.Content,
-			&c.CreatedAt,
-			&c.User.Username,
-			&c.User.ID)
+		err := rows.Scan(&c.ID, &c.PostID, &c.UserID, &c.Content, &c.CreatedAt, &c.User.Username, &c.User.ID)
 		if err != nil {
 			return nil, err
 		}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/afirthes/recapcards/internal/store"
+	"log"
 	"net/http"
 )
 
@@ -25,7 +26,6 @@ import (
 //	@Security		ApiKeyAuth
 //	@Router			/users/feed [get]
 func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
-
 	fq := store.PaginatedFeedQuery{
 		Limit:  20,
 		Offset: 0,
@@ -43,10 +43,11 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	log.Println(fq.Search)
+
 	ctx := r.Context()
 
-	user := getUserFromContext(r)
-	feed, err := app.storage.Posts.GetUserFeed(ctx, user.ID, fq)
+	feed, err := app.store.Posts.GetUserFeed(ctx, int64(341), fq)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -54,6 +55,5 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 
 	if err := app.jsonResponse(w, http.StatusOK, feed); err != nil {
 		app.internalServerError(w, r, err)
-		return
 	}
 }

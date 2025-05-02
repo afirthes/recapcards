@@ -3,6 +3,8 @@ package store
 import (
 	"context"
 	"database/sql"
+
+	"github.com/lib/pq"
 )
 
 type Follower struct {
@@ -11,14 +13,6 @@ type Follower struct {
 	CreatedAt  string `json:"created_at"`
 }
 
-type Followers interface {
-	Follow(ctx context.Context, followerID, userID int64) error
-	Unfollow(ctx context.Context, followerID, userID int64) error
-}
-
-// Make sure that the UserStorage implements the Users interface
-var _ Followers = (*FollowerStore)(nil)
-
 type FollowerStore struct {
 	db *sql.DB
 }
@@ -26,7 +20,6 @@ type FollowerStore struct {
 func (s *FollowerStore) Follow(ctx context.Context, followerID, userID int64) error {
 	query := `
 		INSERT INTO followers (user_id, follower_id) VALUES ($1, $2)
-		ON CONFLICT (user_id, follower_id) DO NOTHING
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -34,7 +27,9 @@ func (s *FollowerStore) Follow(ctx context.Context, followerID, userID int64) er
 
 	_, err := s.db.ExecContext(ctx, query, userID, followerID)
 	if err != nil {
-		return err
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+			return ErrConflict
+		}
 	}
 
 	return nil
@@ -42,16 +37,13 @@ func (s *FollowerStore) Follow(ctx context.Context, followerID, userID int64) er
 
 func (s *FollowerStore) Unfollow(ctx context.Context, followerID, userID int64) error {
 	query := `
-		DELETE FROM followers where user_id = $1 AND follower_id = $2
+		DELETE FROM followers 
+		WHERE user_id = $1 AND follower_id = $2
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
 	_, err := s.db.ExecContext(ctx, query, userID, followerID)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
