@@ -5,7 +5,7 @@ import (
 	"github.com/afirthes/recapcards/internal/db"
 	"github.com/afirthes/recapcards/internal/env"
 	"github.com/afirthes/recapcards/internal/store"
-	"log"
+	"go.uber.org/zap"
 )
 
 const version = "0.0.2"
@@ -21,8 +21,6 @@ const version = "0.0.2"
 // @name						Authorization
 // @description
 func main() {
-	log.Println("Starting server...")
-
 	cfg := config{
 		Addr:   env.GetString("SERVER_ADDR", ":8080"),
 		ApiURL: env.GetString("EXTERNAL_URL", "localhost:8080"),
@@ -35,20 +33,25 @@ func main() {
 		Env: env.GetString("ENV", "development"),
 	}
 
+	// Logger
+	logger := zap.Must(zap.NewProduction()).Sugar()
+	defer closeLogger(logger)
+
+	// Database
 	database, err := db.New(
 		cfg.Db.addr,
 		cfg.Db.maxOpenConns,
 		cfg.Db.maxIdleConns,
 		cfg.Db.maxIdleTime)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	// Closing database connection
 	defer func(database *sql.DB) {
 		err := database.Close()
 		if err != nil {
-			log.Println("Error closing database connection in defer section:", err)
+			logger.Error("Error closing database connection in defer section:", err)
 		}
 	}(database)
 
@@ -57,8 +60,16 @@ func main() {
 	app := &application{
 		config:  cfg,
 		storage: storage,
+		logger:  logger,
 	}
 
-	log.Printf("Server started at %s \n", cfg.Addr)
-	log.Fatal(app.Run(app.mount()))
+	logger.Info("Server started at ", "addr", cfg.Addr)
+	logger.Fatal(app.Run(app.mount()))
+}
+
+func closeLogger(logger *zap.SugaredLogger) {
+	err := logger.Sync()
+	if err != nil {
+		logger.Error("Error syncing logger:", err)
+	}
 }

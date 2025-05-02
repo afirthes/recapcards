@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/swaggo/http-swagger/v2"
+	"go.uber.org/zap"
 	"log"
 	"net/http"
 	"time"
@@ -22,6 +23,7 @@ type config struct {
 type application struct {
 	config  config
 	storage store.Storage
+	logger  *zap.SugaredLogger
 }
 
 type dbConfig struct {
