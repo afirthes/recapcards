@@ -1,18 +1,22 @@
 package main
 
 import (
+	"fmt"
+	"github.com/afirthes/recapcards/docs"
 	"github.com/afirthes/recapcards/internal/store"
-	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/swaggo/http-swagger/v2"
 	"log"
 	"net/http"
 	"time"
 )
 
 type config struct {
-	Addr string
-	Db   dbConfig
-	Env  string
+	Addr   string
+	Db     dbConfig
+	Env    string
+	ApiURL string
 }
 
 type application struct {
@@ -40,6 +44,11 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Route("/v1", func(r chi.Router) {
+
+		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.Addr)
+		r.Get("/swagger/*", httpSwagger.Handler(
+			httpSwagger.URL(docsURL),
+		))
 
 		r.Get("/health", app.healthHandler)
 
@@ -73,6 +82,10 @@ func (app *application) mount() http.Handler {
 }
 
 func (app *application) Run(mux http.Handler) error {
+
+	docs.SwaggerInfo.Version = version
+	docs.SwaggerInfo.Host = app.config.ApiURL
+	docs.SwaggerInfo.BasePath = "/v1"
 
 	if app.config.Addr == "" {
 		log.Fatalf("FATAL: Server address is not set")

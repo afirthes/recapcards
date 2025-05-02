@@ -8,13 +8,24 @@ import (
 	"log"
 )
 
-const version = "0.0.1"
+const version = "0.0.2"
 
+//	@title			Recap Cards API
+//	@version		1.0
+//	@description	Api for Recap Cards learning app
+
+// @BasePath					/v1
+//
+// @securityDefinitions.apikey	ApiKeyAuth
+// @in							header
+// @name						Authorization
+// @description
 func main() {
 	log.Println("Starting server...")
 
 	cfg := config{
-		Addr: env.GetString("SERVER_ADDR", ":8080"),
+		Addr:   env.GetString("SERVER_ADDR", ":8080"),
+		ApiURL: env.GetString("EXTERNAL_URL", "localhost:8080"),
 		Db: dbConfig{
 			addr:         env.GetString("DB_ADDR", ""),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),

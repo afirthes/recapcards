@@ -23,3 +23,7 @@ https://github.com/golang-migrate/migrate/tree/master/cmd/migrate
 
 # Validation
 https://github.com/go-playground/validator
+
+# Docs problem fix:
+https://github.com/swaggo/swag/issues/1568
+go get -u github.com/swaggo/swag 
