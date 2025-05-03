@@ -1,3 +1,5 @@
 export SERVER_ADDR=":8080"
 export DB_ADDR="postgres://admin:adminpassword@localhost/socialnetwork?sslmode=disable"
 export ENV="development"
+FROM_EMAIL="admin@your_domain"
+SENDGRID_API_KEY="api_key"

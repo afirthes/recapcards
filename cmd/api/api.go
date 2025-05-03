@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/afirthes/recapcards/docs"
+	"github.com/afirthes/recapcards/internal/mailer"
 	"github.com/afirthes/recapcards/internal/store"
 	"net/http"
 	"time"
@@ -18,6 +19,7 @@ type application struct {
 	config config
 	store  store.Storage
 	logger *zap.SugaredLogger
+	mailer mailer.Client
 }
 
 type config struct {

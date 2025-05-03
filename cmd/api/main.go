@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/afirthes/recapcards/internal/db"
 	"github.com/afirthes/recapcards/internal/env"
+	"github.com/afirthes/recapcards/internal/mailer"
 	"github.com/afirthes/recapcards/internal/store"
 	"time"
 
@@ -69,10 +70,13 @@ func main() {
 
 	store := store.NewStorage(db)
 
+	mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
+
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: logger,
+		mailer: mailer,
 	}
 
 	mux := app.mount()
