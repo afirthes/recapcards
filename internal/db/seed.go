@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/afirthes/recapcards/internal/store"
 	"log"
 
 	"math/rand"
+
+	"github.com/afirthes/recapcards/internal/store"
 )
 
 var usernames = []string{
@@ -115,6 +116,9 @@ func generateUsers(num int) []*store.User {
 		users[i] = &store.User{
 			Username: usernames[i%len(usernames)] + fmt.Sprintf("%d", i),
 			Email:    usernames[i%len(usernames)] + fmt.Sprintf("%d", i) + "@example.com",
+			Role: store.Role{
+				Name: "user",
+			},
 		}
 	}
 

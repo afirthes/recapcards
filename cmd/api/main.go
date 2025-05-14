@@ -3,11 +3,11 @@ package main
 import (
 	"time"
 
-	"github.com/sikozonpc/social/internal/auth"
-	"github.com/sikozonpc/social/internal/db"
-	"github.com/sikozonpc/social/internal/env"
-	"github.com/sikozonpc/social/internal/mailer"
-	"github.com/sikozonpc/social/internal/store"
+	"github.com/afirthes/recapcards/internal/auth"
+	"github.com/afirthes/recapcards/internal/db"
+	"github.com/afirthes/recapcards/internal/env"
+	"github.com/afirthes/recapcards/internal/mailer"
+	"github.com/afirthes/recapcards/internal/store"
 	"go.uber.org/zap"
 )
 

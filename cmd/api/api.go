@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/afirthes/recapcards/docs"
+	"github.com/afirthes/recapcards/internal/auth"
+	"github.com/afirthes/recapcards/internal/mailer"
+	"github.com/afirthes/recapcards/internal/store"
 	"net/http"
 	"time"
 
@@ -9,10 +13,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 
-	"github.com/sikozonpc/social/docs" // This is required to generate swagger docs
-	"github.com/sikozonpc/social/internal/auth"
-	"github.com/sikozonpc/social/internal/mailer"
-	"github.com/sikozonpc/social/internal/store"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
@@ -21,7 +21,7 @@ type application struct {
 	store         store.Storage
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
-	authenticator auth.Authenticator
+	authenticator *auth.JWTAuthenticator
 }
 
 type config struct {
