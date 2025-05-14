@@ -54,8 +54,8 @@ type UserStore struct {
 
 func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 	query := `
-		INSERT INTO users (username, password, email, role_id) VALUES 
-    ($1, $2, $3, (SELECT id FROM roles WHERE name = $4))
+		INSERT INTO users (username, password, email, role_id, is_active) VALUES 
+    ($1, $2, $3, (SELECT id FROM roles WHERE name = $4), true)
     RETURNING id, created_at
 	`
 
@@ -134,10 +134,6 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 func (s *UserStore) CreateAndInvite(ctx context.Context, user *User, token string, invitationExp time.Duration) error {
 	return withTx(s.db, ctx, func(tx *sql.Tx) error {
 		if err := s.Create(ctx, tx, user); err != nil {
-			return err
-		}
-
-		if err := s.createUserInvitation(ctx, tx, token, invitationExp, user.ID); err != nil {
 			return err
 		}
 
