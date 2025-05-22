@@ -40,6 +40,12 @@ type Storage struct {
 	Roles interface {
 		GetByName(context.Context, string) (*Role, error)
 	}
+	Questions interface {
+		Create(context.Context, *Question) error
+	}
+	Categories interface {
+		Create(context.Context, *Question) error
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
@@ -49,6 +55,7 @@ func NewStorage(db *sql.DB) Storage {
 		Comments:  &CommentStore{db},
 		Followers: &FollowerStore{db},
 		Roles:     &RoleStore{db},
+		Questions: &QuestionStore{db},
 	}
 }
 
