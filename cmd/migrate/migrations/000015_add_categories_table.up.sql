@@ -3,10 +3,10 @@ CREATE TABLE IF NOT EXISTS Categories (
     title TEXT,
     parent BIGINT,
     is_public boolean,
-    creator BIGINT not null,
+    user_id BIGINT not null,
     created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
     updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (creator) REFERENCES Users (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE,
     FOREIGN KEY (parent) REFERENCES Categories (id) ON DELETE CASCADE
 );
 

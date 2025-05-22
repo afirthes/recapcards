@@ -9,7 +9,15 @@ test:
 migration:
 	@migrate create -seq -ext sql -dir $(MIGRATIONS_PATH) $(filter-out $@,$(MAKECMDGOALS))
 
-.PHONY: migrate-up
+.PHONY: migrate-force
+migrate-force:
+	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
+		echo "❌ Укажите версию: make migrate-force <version>"; \
+		exit 1; \
+	fi; \
+	migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) force $(filter-out $@,$(MAKECMDGOALS))
+
+.PHONY: migrate-upd
 migrate-up:
 	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) up
 
@@ -24,3 +32,7 @@ seed:
 .PHONY: gen-docs
 gen-docs:
 	@swag init -g ./api/main.go -d cmd,internal && swag fmt
+
+# ловушка, чтобы make не ругался на “неизвестную цель”
+%::
+	@:

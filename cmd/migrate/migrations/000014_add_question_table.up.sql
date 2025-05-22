@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS Questions (
     question TEXT,
     answer TEXT,
     is_public BOOLEAN,
-    creator BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
     created_at TIMESTAMPTZ(0) NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ(0) NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (creator) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
